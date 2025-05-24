@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
+import { prisma } from '@/lib/prisma';
 
 export default function CreateListing() {
   const router = useRouter();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      router.replace('/login');
+    }
+  }, [session, router]);
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
@@ -70,41 +77,43 @@ export default function CreateListing() {
         });
 
         if (!uploadResponse.ok) {
-          throw new Error('Erreur lors de l\'upload des images');
+          throw new Error('Erreur lors du téléchargement des images');
         }
 
-        const imageData = await uploadResponse.json();
-        uploadedImages.push(imageData);
+        const uploadResult = await uploadResponse.json();
+        uploadedImages.push({
+          url: uploadResult.url,
+          publicId: uploadResult.publicId,
+        });
+
         setUploadProgress(((i + 1) / totalImages) * 100);
       }
 
-      // Then create the listing
-      const formData = new FormData(e.currentTarget);
-      const data = {
-        title: formData.get('title'),
-        description: formData.get('description'),
-        surface: parseFloat(formData.get('surface') as string),
-        price: parseFloat(formData.get('price') as string),
-        address: formData.get('address'),
-        postalCode: formData.get('postalCode'),
-        city: formData.get('city'),
-        spaceType: formData.get('spaceType'),
-        is24_7: is24_7,
-        hasConcreteSlab,
-        hasElectricity,
-        hasWater,
-        internetType: internetType || null,
-        openingTime: !is24_7 ? formData.get('openingTime') : null,
-        closingTime: !is24_7 ? formData.get('closingTime') : null,
+      // Get form values
+      const form = e.target as HTMLFormElement;
+      const formElements = form.elements as HTMLFormControlsCollection;
+
+      // Prepare data for API call
+      const listingData = {
+        title: (formElements.namedItem('title') as HTMLInputElement)?.value || '',
+        description: (formElements.namedItem('description') as HTMLTextAreaElement)?.value || '',
+        surface: (formElements.namedItem('surface') as HTMLInputElement)?.value ? parseFloat((formElements.namedItem('surface') as HTMLInputElement).value) : 0,
+        price: (formElements.namedItem('monthlyRent') as HTMLInputElement)?.value ? parseFloat((formElements.namedItem('monthlyRent') as HTMLInputElement).value) : 0,
         mainCategory: selectedMainCategory,
-        foodVendingType: selectedMainCategory === 'VENDING_MACHINE' && formData.get('subCategory') === 'FOOD' ? formData.get('specificType') : null,
-        farmVendingType: selectedMainCategory === 'VENDING_MACHINE' && formData.get('subCategory') === 'FARM' ? formData.get('specificType') : null,
-        goodsVendingType: selectedMainCategory === 'VENDING_MACHINE' && formData.get('subCategory') === 'GOODS' ? formData.get('specificType') : null,
-        petVendingType: selectedMainCategory === 'VENDING_MACHINE' && formData.get('subCategory') === 'PET' ? formData.get('specificType') : null,
-        arcadeType: selectedMainCategory === 'ARCADE' ? formData.get('specificType') : null,
-        logisticsType: selectedMainCategory === 'LOGISTICS' ? formData.get('specificType') : null,
-        miscType: selectedMainCategory === 'MISC' ? formData.get('specificType') : null,
-        images: uploadedImages,
+        subCategory: selectedSubCategory,
+        specificType: (formElements.namedItem('specificType') as HTMLSelectElement)?.value || null,
+        address: (formElements.namedItem('address') as HTMLInputElement)?.value || '',
+        postalCode: (formElements.namedItem('postalCode') as HTMLInputElement)?.value || '',
+        city: (formElements.namedItem('city') as HTMLInputElement)?.value || '',
+        hasConcreteSlab: hasConcreteSlab,
+        hasElectricity: hasElectricity,
+        hasWater: hasWater,
+        internetType: internetType || null,
+        is24_7: is24_7,
+        openingTime: !is24_7 ? (formElements.namedItem('openingTime') as HTMLInputElement)?.value : null,
+        closingTime: !is24_7 ? (formElements.namedItem('closingTime') as HTMLInputElement)?.value : null,
+        spaceType: ((formElements.namedItem('spaceType') as HTMLSelectElement)?.value || 'INDOOR') as 'INDOOR' | 'OUTDOOR' | 'MIXED',
+        images: uploadedImages
       };
 
       const response = await fetch('/api/listings', {
@@ -112,14 +121,15 @@ export default function CreateListing() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(listingData),
       });
 
       if (!response.ok) {
         throw new Error('Erreur lors de la création de l\'annonce');
       }
 
-      router.push('/mes-annonces');
+      const listing = await response.json();
+      router.push(`/confirmation?id=${listing.id}`);
     } catch (err) {
       console.error('Error:', err);
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -190,16 +200,17 @@ export default function CreateListing() {
                     className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
                     <option value="">Sélectionnez un type</option>
-                    <option value="FOOD">Alimentation</option>
-                    <option value="FARM">Produits fermiers</option>
-                    <option value="GOODS">Biens de consommation</option>
-                    <option value="PET">Produits pour animaux</option>
+                    <option value="ALL">✨ Tout type de distributeur</option>
+                    <option value="FOOD">🥗 Alimentation / Boissons</option>
+                    <option value="FARM">🌿 Produits fermiers / Bio</option>
+                    <option value="GOODS">🌸 Autres biens physiques</option>
+                    <option value="PET">🛠️ Animaux</option>
                   </select>
 
                   {selectedSubCategory === 'FOOD' && (
                     <div className="mt-4">
                       <label htmlFor="specificType" className="block text-sm font-bold text-indigo-600">
-                        Type de nourriture
+                        Type de distributeur alimentaire
                       </label>
                       <select
                         id="specificType"
@@ -208,10 +219,20 @@ export default function CreateListing() {
                         className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       >
                         <option value="">Sélectionnez un type</option>
-                        <option value="SNACKS">Snacks</option>
-                        <option value="DRINKS">Boissons</option>
-                        <option value="MEALS">Repas</option>
-                        <option value="COFFEE">Café</option>
+                        <option value="ALL">✨ Tout type de distributeur alimentaire</option>
+                        <option value="PIZZA">Distributeur de pizzas</option>
+                        <option value="HOT_MEALS">Distributeur de plats cuisinés / repas chauds</option>
+                        <option value="SANDWICHES">Distributeur de sandwiches</option>
+                        <option value="SNACKS">Distributeur de snacks / confiseries</option>
+                        <option value="HOT_DRINKS">Distributeur de boissons chaudes</option>
+                        <option value="COLD_DRINKS">Distributeur de boissons fraîches</option>
+                        <option value="DAIRY">Distributeur de lait / produits laitiers</option>
+                        <option value="EGGS">Distributeur d'œufs</option>
+                        <option value="FRUITS_VEGETABLES">Distributeur de fruits et légumes</option>
+                        <option value="BREAD">Distributeur de pain</option>
+                        <option value="ICE_CREAM">Distributeur de glaces / sorbets</option>
+                        <option value="MATCHA">Distributeur de Matcha</option>
+                        <option value="CBD">Distributeur de CBD</option>
                       </select>
                     </div>
                   )}
@@ -228,10 +249,13 @@ export default function CreateListing() {
                         className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       >
                         <option value="">Sélectionnez un type</option>
-                        <option value="EGGS">Œufs</option>
-                        <option value="MILK">Produits laitiers</option>
-                        <option value="VEGETABLES">Légumes</option>
-                        <option value="FRUITS">Fruits</option>
+                        <option value="ALL">✨ Tout type de distributeur de produits fermiers</option>
+                        <option value="ORGANIC">Distributeur de produits bio</option>
+                        <option value="FARM_PRODUCTS">Distributeur de produits fermiers (mix)</option>
+                        <option value="HONEY">Distributeur de miel</option>
+                        <option value="CHEESE">Distributeur de fromage</option>
+                        <option value="CHARCUTERIE">Distributeur de charcuterie</option>
+                        <option value="BULK_PRODUCTS">Distributeur de produits en vrac</option>
                       </select>
                     </div>
                   )}
@@ -248,10 +272,12 @@ export default function CreateListing() {
                         className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       >
                         <option value="">Sélectionnez un type</option>
-                        <option value="HYGIENE">Hygiène</option>
+                        <option value="ALL">✨ Tout type de biens</option>
+                        <option value="CLOTHES">Vêtements</option>
+                        <option value="ACCESSORIES">Accessoires</option>
                         <option value="ELECTRONICS">Électronique</option>
-                        <option value="TOYS">Jouets</option>
-                        <option value="BOOKS">Livres/Magazines</option>
+                        <option value="BOOKS">Livres</option>
+                        <option value="SPORTS">Sports</option>
                       </select>
                     </div>
                   )}
@@ -259,7 +285,7 @@ export default function CreateListing() {
                   {selectedSubCategory === 'PET' && (
                     <div className="mt-4">
                       <label htmlFor="specificType" className="block text-sm font-bold text-indigo-600">
-                        Type de produits pour animaux
+                        Type de distributeur pour animaux
                       </label>
                       <select
                         id="specificType"
@@ -268,33 +294,11 @@ export default function CreateListing() {
                         className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       >
                         <option value="">Sélectionnez un type</option>
-                        <option value="FOOD">Nourriture</option>
-                        <option value="TREATS">Friandises</option>
-                        <option value="TOYS">Jouets</option>
-                        <option value="SUPPLIES">Accessoires</option>
+                        <option value="ALL">✨ Tout type de distributeur pour animaux</option>
+                        <option value="PET_FOOD">Distributeur d'alimentation pour animaux</option>
                       </select>
                     </div>
                   )}
-                </div>
-              )}
-
-              {selectedMainCategory === 'ARCADE' && (
-                <div className="mt-4">
-                  <label htmlFor="specificType" className="block text-sm font-bold text-indigo-600">
-                    Type de jeux
-                  </label>
-                  <select
-                    id="specificType"
-                    name="specificType"
-                    required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  >
-                    <option value="">Sélectionnez un type</option>
-                    <option value="VIDEO_GAMES">Jeux vidéo</option>
-                    <option value="PINBALL">Flipper</option>
-                    <option value="CLAW_MACHINE">Machine à pince</option>
-                    <option value="RACING">Simulation de course</option>
-                  </select>
                 </div>
               )}
 
@@ -310,10 +314,102 @@ export default function CreateListing() {
                     className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
                     <option value="">Sélectionnez un type</option>
+                    <option value="ALL">✨ Tout type de service logistique</option>
                     <option value="PARCEL_LOCKER">Consigne à colis</option>
                     <option value="PICKUP_POINT">Point relais</option>
                     <option value="SMART_LOCKER">Casier intelligent</option>
                   </select>
+                </div>
+              )}
+
+              {selectedMainCategory === 'KIOSK' && (
+                <div>
+                  <label htmlFor="subCategory" className="block text-sm font-bold text-indigo-600">
+                    Type de kiosque
+                  </label>
+                  <select
+                    id="subCategory"
+                    name="subCategory"
+                    value={selectedSubCategory}
+                    onChange={(e) => setSelectedSubCategory(e.target.value)}
+                    required
+                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  >
+                    <option value="">Sélectionnez un type</option>
+                    <option value="ALL">✨ Tous types de kiosque</option>
+                    <option value="FOOD">🛒 Kiosques alimentaires / restauration</option>
+                    <option value="OTHER">🌸 Autres types de kiosques</option>
+                    <option value="WELLNESS">🧖‍♀️ Kiosques de bien-être</option>
+                  </select>
+
+                  {selectedSubCategory === 'FOOD' && (
+                    <div className="mt-4">
+                      <label htmlFor="specificType" className="block text-sm font-bold text-indigo-600">
+                        Type de kiosque alimentaire
+                      </label>
+                      <select
+                        id="specificType"
+                        name="specificType"
+                        required
+                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      >
+                        <option value="">Sélectionnez un type</option>
+                        <option value="ALL">✨ Tout type de kiosque alimentaire</option>
+                        <option value="BURGER">Kiosque à burgers</option>
+                        <option value="WAFFLE">Kiosque à gaufres</option>
+                        <option value="FRIES">Kiosque à frites</option>
+                        <option value="KEBAB">Kiosque à kebab</option>
+                        <option value="SANDWICH">Kiosque à sandwichs</option>
+                        <option value="FRUITS_VEGETABLES">Kiosque primeur (fruits & légumes)</option>
+                        <option value="CHEESE">Kiosque fromager</option>
+                        <option value="CHARCUTERIE">Kiosque de charcuterie</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedSubCategory === 'OTHER' && (
+                    <div className="mt-4">
+                      <label htmlFor="specificType" className="block text-sm font-bold text-indigo-600">
+                        Type de kiosque
+                      </label>
+                      <select
+                        id="specificType"
+                        name="specificType"
+                        required
+                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      >
+                        <option value="">Sélectionnez un type</option>
+                        <option value="ALL">✨ Tout type de kiosque</option>
+                        <option value="FLORIST">Kiosque fleuriste</option>
+                        <option value="EXPRESS_REPAIR">Kiosque réparation express</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedSubCategory === 'WELLNESS' && (
+                    <div className="mt-4">
+                      <label htmlFor="specificType" className="block text-sm font-bold text-indigo-600">
+                        Type de service bien-être
+                      </label>
+                      <select
+                        id="specificType"
+                        name="specificType"
+                        required
+                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      >
+                        <option value="">Sélectionnez un type</option>
+                        <option value="ALL">✨ Tout type de kiosque bien-être</option>
+                        <option value="HAIRDRESSER">Kiosque coiffure / barbier</option>
+                        <option value="NAIL_SALON">Kiosque onglerie</option>
+                        <option value="BEAUTICIAN">Kiosque esthéticienne</option>
+                        <option value="FACIAL_MASSAGE">Kiosque soins du visage / massages</option>
+                        <option value="TATTOO_PIERCING">Kiosque tatoueur / pierceur</option>
+                        <option value="PET_GROOMING">Kiosque soins pour animaux (toilettage)</option>
+                        <option value="SEWING">Kiosque de couture</option>
+                        <option value="DRY_CLEANING">Kiosque pressing</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -329,10 +425,10 @@ export default function CreateListing() {
                     className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
                     <option value="">Sélectionnez un type</option>
-                    <option value="PRINTING">Impression</option>
-                    <option value="CHARGING">Recharge d'appareils</option>
-                    <option value="RECYCLING">Recyclage</option>
-                    <option value="OTHER">Autre</option>
+                    <option value="ALL">✨ Tout type de service</option>
+                    <option value="HEATING_PELLETS">Distributeur de granulés chauffage</option>
+                    <option value="PHOTO_BOOTH">Photomaton</option>
+                    <option value="LOCKSMITH">Distributeur de clé serrurier</option>
                   </select>
                 </div>
               )}
@@ -344,7 +440,7 @@ export default function CreateListing() {
                 <textarea
                   id="description"
                   name="description"
-                  rows={3}
+                  rows={4}
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
@@ -363,6 +459,7 @@ export default function CreateListing() {
                   className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
                   <option value="">Sélectionnez un type</option>
+                  <option value="ALL">✨ Tout type d'espace</option>
                   <option value="INDOOR">Intérieur</option>
                   <option value="OUTDOOR">Extérieur</option>
                   <option value="MIXED">Mixte (Intérieur/Extérieur)</option>
@@ -378,21 +475,23 @@ export default function CreateListing() {
                     type="number"
                     name="surface"
                     id="surface"
-                    min="0"
                     required
+                    min="0"
+                    step="0.01"
                     className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="price" className="block text-sm font-bold text-indigo-600">
+                  <label htmlFor="monthlyRent" className="block text-sm font-bold text-indigo-600">
                     Loyer mensuel (€)
                   </label>
                   <input
                     type="number"
-                    name="price"
-                    id="price"
-                    min="0"
+                    name="monthlyRent"
+                    id="monthlyRent"
                     required
+                    min="0"
+                    step="0.01"
                     className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -467,6 +566,7 @@ export default function CreateListing() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
+                      name="hasConcreteSlab"
                       id="hasConcreteSlab"
                       checked={hasConcreteSlab}
                       onChange={(e) => setHasConcreteSlab(e.target.checked)}
@@ -479,6 +579,7 @@ export default function CreateListing() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
+                      name="hasElectricity"
                       id="hasElectricity"
                       checked={hasElectricity}
                       onChange={(e) => setHasElectricity(e.target.checked)}
@@ -491,6 +592,7 @@ export default function CreateListing() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
+                      name="hasWater"
                       id="hasWater"
                       checked={hasWater}
                       onChange={(e) => setHasWater(e.target.checked)}

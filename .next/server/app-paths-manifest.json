@@ -1,0 +1,12 @@
+{
+  "/page": "app/page.js",
+  "/login/page": "app/login/page.js",
+  "/profil/page": "app/profil/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/users/profile/route": "app/api/users/profile/route.js",
+  "/api/users/listings/route": "app/api/users/listings/route.js",
+  "/favoris/page": "app/favoris/page.js",
+  "/api/favorites/route": "app/api/favorites/route.js",
+  "/api/listings/[id]/route": "app/api/listings/[id]/route.js",
+  "/annonces/[id]/page": "app/annonces/[id]/page.js"
+}
