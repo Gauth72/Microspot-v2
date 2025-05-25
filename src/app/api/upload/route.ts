@@ -1,13 +1,9 @@
-import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 export async function POST(request: Request) {
   try {
@@ -30,19 +26,27 @@ export async function POST(request: Request) {
       );
     }
 
-    // Convert File to base64
+    console.log('Processing file:', file.name);
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const fileBase64 = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(fileBase64, {
-      folder: 'microspot',
-    });
+    // Générer un nom de fichier unique
+    const fileName = `${Date.now()}-${file.name}`;
+    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    const filePath = join(uploadDir, fileName);
+
+    // Créer le dossier uploads s'il n'existe pas
+    if (!existsSync(uploadDir)) {
+      console.log('Creating uploads directory...');
+      await mkdir(uploadDir, { recursive: true });
+    }
+
+    console.log('Saving file to:', filePath);
+    // Sauvegarder le fichier
+    await writeFile(filePath, buffer);
 
     return NextResponse.json({
-      url: result.secure_url,
-      publicId: result.public_id,
+      url: `/uploads/${fileName}`,
     });
   } catch (error) {
     console.error('Error uploading file:', error);

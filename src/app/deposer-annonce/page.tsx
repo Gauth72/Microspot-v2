@@ -5,12 +5,28 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { prisma } from '@/lib/prisma';
+import { toast } from 'react-hot-toast';
+
+enum SpaceType {
+  INDOOR = 'INDOOR',
+  OUTDOOR = 'OUTDOOR',
+  MIXED = 'MIXED'
+}
+
+enum MainCategory {
+  VENDING_MACHINE = 'VENDING_MACHINE',
+  KIOSK = 'KIOSK',
+  ARCADE = 'ARCADE',
+  LOGISTICS = 'LOGISTICS',
+  MISC = 'MISC'
+}
 
 export default function CreateListing() {
   const router = useRouter();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!session) {
@@ -19,14 +35,23 @@ export default function CreateListing() {
   }, [session, router]);
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
+  const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(MainCategory.VENDING_MACHINE);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
   const [is24_7, setIs24_7] = useState(false);
-  const [spaceType, setSpaceType] = useState<string>('');
+  const [openingTime, setOpeningTime] = useState<string>('');
+  const [closingTime, setClosingTime] = useState<string>('');
+  const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.INDOOR);
   const [hasConcreteSlab, setHasConcreteSlab] = useState(false);
   const [hasElectricity, setHasElectricity] = useState(false);
   const [hasWater, setHasWater] = useState(false);
   const [internetType, setInternetType] = useState<string>('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [surface, setSurface] = useState('');
+  const [monthlyRent, setMonthlyRent] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -47,75 +72,88 @@ export default function CreateListing() {
   }, []);
 
   const handleMainCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedMainCategory(e.target.value);
+    setSelectedMainCategory(e.target.value as MainCategory);
     setSelectedSubCategory('');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('Form submission started');
+
     if (!session?.user) {
       router.push('/login');
       return;
     }
 
+    if (!images || images.length === 0) {
+      toast.error('Veuillez sélectionner au moins une image');
+      return;
+    }
+
+    setIsSubmitting(true);
     setLoading(true);
-    setError(null);
     setUploadProgress(0);
 
     try {
-      // Upload images first
-      const uploadedImages = [];
+      const uploadedImages: string[] = [];
       const totalImages = images.length;
 
       for (let i = 0; i < totalImages; i++) {
-        const formData = new FormData();
-        formData.append('file', images[i].file);
+        try {
+          const formData = new FormData();
+          formData.append('file', images[i].file);
 
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
+          console.log('Uploading image', i + 1, 'of', totalImages);
+          console.log('File name:', images[i].file.name);
+          console.log('File size:', images[i].file.size);
 
-        if (!uploadResponse.ok) {
-          throw new Error('Erreur lors du téléchargement des images');
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            console.error('Upload failed:', data.error);
+            throw new Error(data.error || 'Erreur lors de l\'upload de l\'image');
+          }
+
+          console.log('Upload successful:', data.url);
+          uploadedImages.push(data.url);
+          setUploadProgress(((i + 1) / totalImages) * 100);
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('Erreur lors de l\'upload de l\'image');
+          setIsSubmitting(false);
+          setLoading(false);
+          return;
         }
-
-        const uploadResult = await uploadResponse.json();
-        uploadedImages.push({
-          url: uploadResult.url,
-          publicId: uploadResult.publicId,
-        });
-
-        setUploadProgress(((i + 1) / totalImages) * 100);
       }
 
-      // Get form values
-      const form = e.target as HTMLFormElement;
-      const formElements = form.elements as HTMLFormControlsCollection;
-
-      // Prepare data for API call
       const listingData = {
-        title: (formElements.namedItem('title') as HTMLInputElement)?.value || '',
-        description: (formElements.namedItem('description') as HTMLTextAreaElement)?.value || '',
-        surface: (formElements.namedItem('surface') as HTMLInputElement)?.value ? parseFloat((formElements.namedItem('surface') as HTMLInputElement).value) : 0,
-        price: (formElements.namedItem('monthlyRent') as HTMLInputElement)?.value ? parseFloat((formElements.namedItem('monthlyRent') as HTMLInputElement).value) : 0,
+        title,
+        description,
+        surface: parseFloat(surface || '0'),
+        price: parseFloat(monthlyRent || '0'),
+        address,
+        city,
+        postalCode,
+        is24_7,
+        openingTime: is24_7 ? null : openingTime,
+        closingTime: is24_7 ? null : closingTime,
+        spaceType,
+        hasConcreteSlab,
+        hasElectricity,
+        hasWater,
+        internetType,
         mainCategory: selectedMainCategory,
         subCategory: selectedSubCategory,
-        specificType: (formElements.namedItem('specificType') as HTMLSelectElement)?.value || null,
-        address: (formElements.namedItem('address') as HTMLInputElement)?.value || '',
-        postalCode: (formElements.namedItem('postalCode') as HTMLInputElement)?.value || '',
-        city: (formElements.namedItem('city') as HTMLInputElement)?.value || '',
-        hasConcreteSlab: hasConcreteSlab,
-        hasElectricity: hasElectricity,
-        hasWater: hasWater,
-        internetType: internetType || null,
-        is24_7: is24_7,
-        openingTime: !is24_7 ? (formElements.namedItem('openingTime') as HTMLInputElement)?.value : null,
-        closingTime: !is24_7 ? (formElements.namedItem('closingTime') as HTMLInputElement)?.value : null,
-        spaceType: ((formElements.namedItem('spaceType') as HTMLSelectElement)?.value || 'INDOOR') as 'INDOOR' | 'OUTDOOR' | 'MIXED',
-        images: uploadedImages
+        images: uploadedImages,
+        listingType: 'LOCATION',
       };
 
+      console.log('Sending listing data to API:', listingData);
       const response = await fetch('/api/listings', {
         method: 'POST',
         headers: {
@@ -124,17 +162,29 @@ export default function CreateListing() {
         body: JSON.stringify(listingData),
       });
 
+      console.log('API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Erreur lors de la création de l\'annonce');
+        const errorData = await response.json();
+        console.error('API error response:', errorData);
+        throw new Error(errorData.error || 'Erreur lors de la création de l\'annonce');
       }
 
       const listing = await response.json();
-      router.push(`/confirmation?id=${listing.id}`);
-    } catch (err) {
-      console.error('Error:', err);
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      console.log('Listing created:', listing);
+      router.push(`/annonces/${listing.id}`);
+    } catch (error) {
+      console.error('Error:', error);
+      let errorMessage = 'Une erreur est survenue lors de la création de l\'annonce';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      toast.error(errorMessage);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -171,22 +221,21 @@ export default function CreateListing() {
                 </label>
                 <select
                   id="mainCategory"
-                  name="mainCategory"
                   value={selectedMainCategory}
                   onChange={handleMainCategoryChange}
                   required
-                  className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Sélectionnez un type</option>
-                  <option value="VENDING_MACHINE">Distributeur automatique</option>
-                  <option value="KIOSK">Kiosque</option>
-                  <option value="ARCADE">Arcade / Jeux</option>
-                  <option value="LOGISTICS">Point logistique</option>
-                  <option value="MISC">Autre</option>
+                  <option value={MainCategory.VENDING_MACHINE}>Distributeur automatique</option>
+                  <option value={MainCategory.KIOSK}>Kiosque</option>
+                  <option value={MainCategory.ARCADE}>Arcade / Jeux</option>
+                  <option value={MainCategory.LOGISTICS}>Point logistique</option>
+                  <option value={MainCategory.MISC}>Autre</option>
                 </select>
               </div>
 
-              {selectedMainCategory === 'VENDING_MACHINE' && (
+              {selectedMainCategory === MainCategory.VENDING_MACHINE && (
                 <div>
                   <label htmlFor="subCategory" className="block text-sm font-bold text-indigo-600">
                     Type de distributeur
@@ -197,7 +246,7 @@ export default function CreateListing() {
                     value={selectedSubCategory}
                     onChange={(e) => setSelectedSubCategory(e.target.value)}
                     required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Sélectionnez un type</option>
                     <option value="ALL">✨ Tout type de distributeur</option>
@@ -216,7 +265,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de distributeur alimentaire</option>
@@ -246,7 +295,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de distributeur de produits fermiers</option>
@@ -269,7 +318,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de biens</option>
@@ -291,7 +340,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de distributeur pour animaux</option>
@@ -311,7 +360,7 @@ export default function CreateListing() {
                     id="specificType"
                     name="specificType"
                     required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Sélectionnez un type</option>
                     <option value="ALL">✨ Tout type de service logistique</option>
@@ -333,7 +382,7 @@ export default function CreateListing() {
                     value={selectedSubCategory}
                     onChange={(e) => setSelectedSubCategory(e.target.value)}
                     required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Sélectionnez un type</option>
                     <option value="ALL">✨ Tous types de kiosque</option>
@@ -351,7 +400,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de kiosque alimentaire</option>
@@ -376,7 +425,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de kiosque</option>
@@ -395,7 +444,7 @@ export default function CreateListing() {
                         id="specificType"
                         name="specificType"
                         required
-                        className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option value="">Sélectionnez un type</option>
                         <option value="ALL">✨ Tout type de kiosque bien-être</option>
@@ -422,7 +471,7 @@ export default function CreateListing() {
                     id="specificType"
                     name="specificType"
                     required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Sélectionnez un type</option>
                     <option value="ALL">✨ Tout type de service</option>
@@ -441,8 +490,10 @@ export default function CreateListing() {
                   id="description"
                   name="description"
                   rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
@@ -452,17 +503,15 @@ export default function CreateListing() {
                 </label>
                 <select
                   id="spaceType"
-                  name="spaceType"
                   value={spaceType}
-                  onChange={(e) => setSpaceType(e.target.value)}
+                  onChange={(e) => setSpaceType(e.target.value as SpaceType)}
+                  className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
-                  className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
-                  <option value="">Sélectionnez un type</option>
-                  <option value="ALL">✨ Tout type d'espace</option>
-                  <option value="INDOOR">Intérieur</option>
-                  <option value="OUTDOOR">Extérieur</option>
-                  <option value="MIXED">Mixte (Intérieur/Extérieur)</option>
+                  <option value="">Sélectionnez un type d'espace</option>
+                  <option value={SpaceType.INDOOR}>Intérieur</option>
+                  <option value={SpaceType.OUTDOOR}>Extérieur</option>
+                  <option value={SpaceType.MIXED}>Mixte</option>
                 </select>
               </div>
 
@@ -475,10 +524,12 @@ export default function CreateListing() {
                     type="number"
                     name="surface"
                     id="surface"
+                    value={surface}
+                    onChange={(e) => setSurface(e.target.value)}
                     required
                     min="0"
                     step="0.01"
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -489,10 +540,12 @@ export default function CreateListing() {
                     type="number"
                     name="monthlyRent"
                     id="monthlyRent"
+                    value={monthlyRent}
+                    onChange={(e) => setMonthlyRent(e.target.value)}
                     required
                     min="0"
                     step="0.01"
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -518,8 +571,10 @@ export default function CreateListing() {
                     type="text"
                     name="address"
                     id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
                     required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -530,9 +585,11 @@ export default function CreateListing() {
                     type="text"
                     name="postalCode"
                     id="postalCode"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
                     required
                     pattern="[0-9]{5}"
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -543,8 +600,10 @@ export default function CreateListing() {
                     type="text"
                     name="city"
                     id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                     required
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -612,7 +671,7 @@ export default function CreateListing() {
                     name="internetType"
                     value={internetType}
                     onChange={(e) => setInternetType(e.target.value)}
-                    className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Aucun</option>
                     <option value="WIFI">WiFi</option>
@@ -656,8 +715,10 @@ export default function CreateListing() {
                       type="time"
                       name="openingTime"
                       id="openingTime"
+                      value={openingTime}
+                      onChange={(e) => setOpeningTime(e.target.value)}
                       required
-                      className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                   <div>
@@ -668,8 +729,10 @@ export default function CreateListing() {
                       type="time"
                       name="closingTime"
                       id="closingTime"
+                      value={closingTime}
+                      onChange={(e) => setClosingTime(e.target.value)}
                       required
-                      className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="block w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                 </div>
@@ -696,6 +759,7 @@ export default function CreateListing() {
                       width={200}
                       height={200}
                       className="w-full h-40 object-cover rounded-lg"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <button
                       type="button"

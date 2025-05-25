@@ -3,24 +3,41 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 
+enum MainCategory {
+  VENDING_MACHINE = 'VENDING_MACHINE',
+  KIOSK = 'KIOSK',
+  ARCADE = 'ARCADE',
+  LOGISTICS = 'LOGISTICS',
+  MISC = 'MISC'
+}
+
+enum SpaceType {
+  INDOOR = 'INDOOR',
+  OUTDOOR = 'OUTDOOR',
+  MIXED = 'MIXED'
+}
+
 export async function POST(request: Request) {
   try {
+    console.log('Starting POST request to create listing');
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
+      console.log('No session found');
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
       );
     }
 
+    console.log('User authenticated:', session.user);
     const data = await request.json();
     console.log('Received data:', data);
     const { images, subCategory, specificType, ...listingData } = data;
     
     // Traitement du type spécifique en fonction de la catégorie principale
     let vendingTypeData = {};
-    if (data.mainCategory === 'VENDING_MACHINE' && specificType) {
+    if (data.mainCategory === MainCategory.VENDING_MACHINE && specificType) {
       switch (subCategory) {
         case 'FOOD':
           vendingTypeData = { foodVendingType: specificType };
@@ -35,7 +52,7 @@ export async function POST(request: Request) {
           vendingTypeData = { petVendingType: specificType };
           break;
       }
-    } else if (data.mainCategory === 'KIOSK' && specificType) {
+    } else if (data.mainCategory === MainCategory.KIOSK && specificType) {
       switch (subCategory) {
         case 'FOOD':
           vendingTypeData = { foodKioskType: specificType };
@@ -49,13 +66,13 @@ export async function POST(request: Request) {
       }
     } else if (specificType) {
       switch (data.mainCategory) {
-        case 'ARCADE':
+        case MainCategory.ARCADE:
           vendingTypeData = { arcadeType: specificType };
           break;
-        case 'LOGISTICS':
+        case MainCategory.LOGISTICS:
           vendingTypeData = { logisticsType: specificType };
           break;
-        case 'MISC':
+        case MainCategory.MISC:
           vendingTypeData = { miscType: specificType };
           break;
       }
@@ -63,28 +80,51 @@ export async function POST(request: Request) {
 
     console.log('ListingData with types:', { ...listingData, ...vendingTypeData });
     
-    const listing = await prisma.listing.create({
-      data: {
+    console.log('Preparing listing data:', {
+      ...listingData,
+      ...vendingTypeData,
+      ownerId: session.user.id,
+      images: images
+    });
+
+    try {
+      const createData = {
         ...listingData,
         ...vendingTypeData,
         ownerId: session.user.id,
         images: {
-          create: images.map((image: { url: string; publicId: string }) => ({
-            url: image.url,
-            publicId: image.publicId,
+          create: images.map((image: string) => ({
+            url: image
           })),
         },
-      },
-      include: {
-        images: true,
-      },
-    });
+      };
+      console.log('Data to be sent to Prisma:', JSON.stringify(createData, null, 2));
 
-    return NextResponse.json(listing);
+      const listing = await prisma.listing.create({
+        data: createData,
+        include: {
+          images: true,
+        },
+      });
+
+      console.log('Listing created successfully:', listing);
+      return NextResponse.json(listing);
+    } catch (prismaError) {
+      console.error('Prisma error details:', {
+        name: prismaError.name,
+        message: prismaError.message,
+        code: (prismaError as any).code,
+        meta: (prismaError as any).meta
+      });
+      return NextResponse.json(
+        { error: `Erreur lors de la création de l'annonce: ${prismaError.message}` },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error('Error creating listing:', error);
+    console.error('Error in POST route:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création de l\'annonce' },
+      { error: error instanceof Error ? error.message : 'Erreur lors de la création de l\'annonce' },
       { status: 500 }
     );
   }
@@ -93,84 +133,82 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Paramètres de recherche de base
+    const query = searchParams.get('query');
+    const location = searchParams.get('location');
+    
+    // Filtres principaux
     const mainCategory = searchParams.get('mainCategory');
-    const subCategory = searchParams.get('subCategory');
-    const specificType = searchParams.get('specificType');
+    const spaceType = searchParams.get('spaceType');
+    
+    // Filtres de surface et prix
     const minSurface = searchParams.get('minSurface');
     const maxSurface = searchParams.get('maxSurface');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
-    const city = searchParams.get('city');
-    const postalCode = searchParams.get('postalCode');
-    const spaceType = searchParams.get('spaceType');
-    const is24_7 = searchParams.get('is24_7');
-    const openBefore = searchParams.get('openBefore');
-    const openAfter = searchParams.get('openAfter');
+    
+    // Filtres d'équipements
+    const hasConcreteSlab = searchParams.get('hasConcreteSlab');
+    const hasElectricity = searchParams.get('hasElectricity');
+    const hasWater = searchParams.get('hasWater');
+    const hasInternet = searchParams.get('hasInternet');
+    
+    // Filtre d'accès
+    const access = searchParams.get('access');
 
     let whereClause: any = {
       status: 'ACTIVE',
     };
 
-    if (mainCategory) whereClause.mainCategory = mainCategory;
-
-    // Add specific type based on main category and subcategory
-    if (specificType) {
-      if (mainCategory === 'VENDING_MACHINE') {
-        switch (subCategory) {
-          case 'FOOD':
-            whereClause.foodVendingType = specificType;
-            break;
-          case 'FARM':
-            whereClause.farmVendingType = specificType;
-            break;
-          case 'GOODS':
-            whereClause.goodsVendingType = specificType;
-            break;
-          case 'PET':
-            whereClause.petVendingType = specificType;
-            break;
-        }
-      } else if (mainCategory === 'ARCADE') {
-        whereClause.arcadeType = specificType;
-      } else if (mainCategory === 'LOGISTICS') {
-        whereClause.logisticsType = specificType;
-      } else if (mainCategory === 'MISC') {
-        whereClause.miscType = specificType;
-      } else if (mainCategory === 'KIOSK') {
-        switch (subCategory) {
-          case 'FOOD':
-            whereClause.foodKioskType = specificType;
-            break;
-          case 'OTHER':
-            whereClause.otherKioskType = specificType;
-            break;
-          case 'WELLNESS':
-            whereClause.wellnessKioskType = specificType;
-            break;
-        }
-      }
-    }
-    if (city) whereClause.city = { contains: city, mode: 'insensitive' };
-    if (postalCode) whereClause.postalCode = postalCode;
-    if (spaceType) whereClause.spaceType = spaceType;
-    if (is24_7 === 'true') whereClause.is24_7 = true;
-    
-    // Filtrage par horaires d'ouverture
-    if (openBefore || openAfter) {
+    // Recherche textuelle
+    if (query) {
       whereClause.OR = [
-        { is24_7: true },
-        {
-          AND: [
-            openBefore ? { openingTime: { lte: openBefore } } : {},
-            openAfter ? { closingTime: { gte: openAfter } } : {}
-          ]
-        }
+        { title: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } }
       ];
     }
-    if (minSurface) whereClause.surface = { gte: parseFloat(minSurface) };
-    if (maxSurface) whereClause.surface = { ...whereClause.surface, lte: parseFloat(maxSurface) };
-    if (minPrice) whereClause.price = { gte: parseFloat(minPrice) };
-    if (maxPrice) whereClause.price = { ...whereClause.price, lte: parseFloat(maxPrice) };
+
+    // Recherche par localisation
+    if (location) {
+      whereClause.OR = [
+        { city: { contains: location, mode: 'insensitive' } },
+        { postalCode: { contains: location, mode: 'insensitive' } }
+      ];
+    }
+
+    // Filtres principaux
+    if (mainCategory) whereClause.mainCategory = mainCategory;
+    if (spaceType) whereClause.spaceType = spaceType;
+
+    // Filtres de surface
+    if (minSurface || maxSurface) {
+      whereClause.surface = {};
+      if (minSurface) whereClause.surface.gte = parseFloat(minSurface);
+      if (maxSurface) whereClause.surface.lte = parseFloat(maxSurface);
+    }
+
+    // Filtres de prix
+    if (minPrice || maxPrice) {
+      whereClause.price = {};
+      if (minPrice) whereClause.price.gte = parseFloat(minPrice);
+      if (maxPrice) whereClause.price.lte = parseFloat(maxPrice);
+    }
+
+    // Filtres d'équipements
+    if (hasConcreteSlab === 'true') whereClause.hasConcreteSlab = true;
+    if (hasElectricity === 'true') whereClause.hasElectricity = true;
+    if (hasWater === 'true') whereClause.hasWater = true;
+    if (hasInternet === 'true') whereClause.internetType = { not: null };
+
+    // Filtre d'accès
+    if (access) {
+      if (access === '24_7') {
+        whereClause.is24_7 = true;
+      } else if (access === 'scheduled') {
+        whereClause.is24_7 = false;
+      }
+    }
 
     const listings = await prisma.listing.findMany({
       where: whereClause,

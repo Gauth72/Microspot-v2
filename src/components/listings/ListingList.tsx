@@ -82,9 +82,12 @@ export default function ListingList() {
           )}
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-2">{listing.title}</h3>
-            <div className="mb-2">
+            <div className="mb-2 flex gap-2">
               <span className="inline-block px-2 py-1 text-sm bg-indigo-100 text-indigo-800 rounded-full">
                 {mainCategoryLabels[listing.mainCategory]}
+              </span>
+              <span className={`inline-block px-2 py-1 text-sm rounded-full ${listing.listingType === 'LOCATION' ? 'bg-blue-100 text-blue-800' : listing.listingType === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                {listing.listingType === 'LOCATION' ? 'Location' : listing.listingType === 'SALE' ? 'Vente' : 'Recherche'}
               </span>
             </div>
             <div className="text-gray-600 mb-2">

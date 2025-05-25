@@ -22,22 +22,28 @@ export const authOptions: NextAuthOptions = {
           where: {
             email: credentials.email,
           },
-          include: {
-            profileImage: true,
-          },
         });
 
-        if (!user || !user.password) {
+        if (!user || !user.hashedPassword) {
+          console.log('User not found or no password:', credentials.email);
           return null;
         }
 
-        const isValid = await compare(credentials.password, user.password);
+        const isValid = await compare(credentials.password, user.hashedPassword);
 
         if (!isValid) {
+          console.log('Invalid password for user:', credentials.email);
           return null;
         }
 
-        return user;
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          profileImage: user.profileImage,
+          coverImage: user.coverImage,
+        };
       },
     })
   ],
@@ -52,17 +58,14 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.sub;
 
-        // Récupérer l'utilisateur avec son image de profil
+        // Récupérer l'utilisateur avec ses images
         const user = await prisma.user.findUnique({
           where: { id: token.sub },
-          include: { profileImage: true },
         });
 
-        if (user?.profileImage) {
-          session.user.profileImage = {
-            url: user.profileImage.url,
-            publicId: user.profileImage.publicId,
-          };
+        if (user) {
+          session.user.profileImage = user.profileImage;
+          session.user.coverImage = user.coverImage;
         }
       }
       return session;

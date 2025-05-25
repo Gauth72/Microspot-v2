@@ -21,15 +21,17 @@ export async function POST(request: Request) {
     // Hasher le mot de passe
     const hashedPassword = await hash(password, 10);
 
+    console.log('Creating user with:', { email, name });
     // Créer l'utilisateur
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        hashedPassword,
         name,
         userType: 'USER',
       },
     });
+    console.log('User created successfully:', user);
 
     return NextResponse.json({
       id: user.id,

@@ -11,22 +11,31 @@ export async function GET() {
   }
 
   try {
+    console.log('Fetching user profile for ID:', session.user.id);
+    
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: {
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        bio: true,
+        phoneNumber: true,
+        emailNotifications: true,
         profileImage: true,
         coverImage: true,
-      },
+      }
     });
 
+    console.log('User data from database:', user);
+
     if (!user) {
+      console.log('User not found');
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    // Ne pas renvoyer le mot de passe
-    const { password, ...userWithoutPassword } = user;
-
-    return NextResponse.json(userWithoutPassword);
+    console.log('Sending user data to client:', user);
+    return NextResponse.json(user);
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json(
@@ -55,16 +64,19 @@ export async function PATCH(request: Request) {
         phoneNumber,
         emailNotifications,
       },
-      include: {
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        bio: true,
+        phoneNumber: true,
+        emailNotifications: true,
         profileImage: true,
         coverImage: true,
-      },
+      }
     });
 
-    // Ne pas renvoyer le mot de passe
-    const { password, ...userWithoutPassword } = updatedUser;
-
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json(updatedUser);
   } catch (error) {
     console.error('Error updating profile:', error);
     return NextResponse.json(

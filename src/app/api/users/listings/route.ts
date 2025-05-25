@@ -19,7 +19,13 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(listings);
+    // Transform les objets images en URLs
+    const transformedListings = listings.map(listing => ({
+      ...listing,
+      images: listing.images.map((image: any) => image.url)
+    }));
+
+    return NextResponse.json(transformedListings);
   } catch (error) {
     console.error('Error fetching user listings:', error);
     return NextResponse.json(

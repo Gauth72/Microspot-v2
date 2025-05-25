@@ -1,7 +1,6 @@
 export type User = {
   id: string;
   name: string;
-  email: string;
 };
 
 export type MainCategory = 'VENDING_MACHINE' | 'KIOSK' | 'ARCADE' | 'LOGISTICS' | 'MISC';

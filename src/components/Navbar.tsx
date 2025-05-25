@@ -8,7 +8,25 @@ import { useSession, signOut } from 'next-auth/react';
 export default function Navbar() {
   const { data: session } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/users/profile');
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        const data = await response.json();
+        setProfileImage(data.profileImage);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    if (session?.user) {
+      fetchProfile();
+    }
+  }, [session]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -50,22 +68,44 @@ export default function Navbar() {
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
             {session && (
-              <Link
-                href="/favoris"
-                className="text-orange-500 hover:text-orange-600 relative"
-                title="Mes favoris"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+              <>
+                <Link
+                  href="/deposer-annonce"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  />
-                </svg>
-              </Link>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Créer une annonce
+                </Link>
+                <Link
+                  href="/favoris"
+                  className="text-orange-500 hover:text-orange-600 relative"
+                  title="Mes favoris"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    />
+                  </svg>
+                </Link>
+              </>
             )}
             {session ? (
               <div className="relative" ref={menuRef}>
@@ -77,12 +117,14 @@ export default function Navbar() {
                     {session.user?.name || session.user?.email}
                   </span>
                   <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 relative">
-                    {session.user?.profileImage ? (
+                    {profileImage ? (
                       <Image
-                        src={session.user.profileImage.url}
+                        src={profileImage}
                         alt="Avatar"
-                        fill
-                        className="object-cover"
+                        width={32}
+                        height={32}
+                        className="object-cover rounded-full"
+                        priority
                       />
                     ) : (
                       <svg

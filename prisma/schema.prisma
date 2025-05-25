@@ -35,27 +35,28 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String
-  emailVerified DateTime?
-  profileImage  ProfileImage?
-  coverImage    CoverImage?
-  accounts      Account[]
-  sessions      Session[]
-  listings      Listing[]
-  favorites     Favorite[]
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  notifications    Notification[]
-  userType      UserType
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  displayName   String?   // Nom affiché publiquement
-  bio           String?   // Courte description
-  phoneNumber   String?   // Numéro de téléphone (privé)
-  emailNotifications Boolean @default(true) // Préférence pour les notifications par email
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String?   @unique
+  emailVerified      DateTime?
+  image              String?
+  hashedPassword     String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  accounts           Account[]
+  sessions           Session[]
+  listings           Listing[]
+  profileImage       String?
+  coverImage         String?
+  emailNotifications Boolean   @default(true)
+  bio                String?   @db.Text
+  phoneNumber        String?
+  displayName        String?   // Nom affiché publiquement
+  userType           UserType
+  sentMessages       Message[] @relation("SentMessages")
+  receivedMessages   Message[] @relation("ReceivedMessages")
+  notifications      Notification[]
+  favorites          Favorite[]
 }
 
 enum SpaceType {
@@ -65,21 +66,22 @@ enum SpaceType {
 }
 
 model Listing {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  surface     Float
-  price       Float
-  address     String
-  postalCode  String
-  city        String
-  latitude    Float?
-  longitude   Float?
-  spaceType   SpaceType
-  is24_7      Boolean  @default(false)
-  openingTime  String?
-  closingTime  String?
-  mainCategory MainCategory
+  id              String    @id @default(cuid())
+  listingType     String    // LOCATION, SALE, WANTED
+  title           String
+  description     String
+  price           Float
+  surface         Float
+  address         String
+  postalCode      String
+  city            String
+  latitude        Float?
+  longitude       Float?
+  spaceType       SpaceType
+  is24_7          Boolean  @default(false)
+  openingTime     String?
+  closingTime     String?
+  mainCategory    MainCategory
   foodVendingType FoodVendingType?
   farmVendingType FarmVendingType?
   goodsVendingType GoodsVendingType?
@@ -107,7 +109,7 @@ model Listing {
 model Image {
   id        String   @id @default(cuid())
   url       String
-  publicId  String
+  publicId  String?
   listingId String
   listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -238,24 +240,6 @@ enum ListingStatus {
   ACTIVE
   RENTED
   INACTIVE
-}
-
-model ProfileImage {
-  id        String   @id @default(cuid())
-  url       String
-  publicId  String
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-}
-
-model CoverImage {
-  id        String   @id @default(cuid())
-  url       String
-  publicId  String
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
 }
 
 model Notification {

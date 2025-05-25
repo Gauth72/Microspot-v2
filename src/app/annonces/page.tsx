@@ -4,7 +4,8 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import ListingFilters from '@/components/listings/ListingFilters';
+import SearchBar from '@/components/listings/SearchBar';
+import AdvancedFilters from '@/components/listings/AdvancedFilters';
 import ListingList from '@/components/listings/ListingList';
 
 function ListingsPageContent() {
@@ -13,18 +14,11 @@ function ListingsPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Annonces</h1>
-        {session && (
-          <Link
-            href="/deposer-annonce"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-          >
-            Créer une annonce
-          </Link>
-        )}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Annonces</h1>
       </div>
-      <ListingFilters />
+      <SearchBar />
+      <AdvancedFilters />
       <ListingList />
     </div>
   );
