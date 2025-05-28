@@ -1,5 +1,10 @@
 {
   "pages": {
+    "/global-error": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/global-error.js"
+    ],
     "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -11,15 +16,25 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/profil/page": [
+    "/error": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/profil/page.js"
+      "static/chunks/app/error.js"
     ],
-    "/login/page": [
+    "/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
+      "static/chunks/app/loading.js"
+    ],
+    "/not-found": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/not-found.js"
+    ],
+    "/messages/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/messages/page.js"
     ],
     "/deposer-annonce/page": [
       "static/chunks/webpack.js",
@@ -35,6 +50,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/annonces/layout.js"
+    ],
+    "/annonces/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/annonces/[id]/page.js"
+    ],
+    "/profil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/profil/page.js"
     ]
   }
 }

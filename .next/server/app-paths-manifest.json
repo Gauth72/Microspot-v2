@@ -1,10 +1,9 @@
 {
   "/page": "app/page.js",
-  "/profil/page": "app/profil/page.js",
   "/deposer-annonce/page": "app/deposer-annonce/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/profil/page": "app/profil/page.js",
   "/api/users/profile/route": "app/api/users/profile/route.js",
-  "/api/users/listings/route": "app/api/users/listings/route.js",
-  "/api/listings/route": "app/api/listings/route.js",
-  "/annonces/page": "app/annonces/page.js"
+  "/annonces/page": "app/annonces/page.js",
+  "/annonces/[id]/page": "app/annonces/[id]/page.js"
 }
