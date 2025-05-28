@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import FAQ from '@/components/FAQ';
-import { Building2, MapPin, Store, GraduationCap, Heart, Dumbbell, Hotel, Landmark, Building } from 'lucide-react';
+import { Building2, MapPin, Store, GraduationCap, Heart, Dumbbell, Hotel, Landmark, Building, Briefcase, School, Train, Coffee, Warehouse, PartyPopper, ParkingCircle, ShoppingBag, Tent, Pizza, ShoppingCart, Package, UtensilsCrossed, Sandwich, Gamepad2, Box } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
 const container = {
@@ -261,117 +261,223 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">
-              Comment ça marche
-            </h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Une solution simple et efficace
-            </p>
-          </div>
-
-          <div className="mt-10">
-            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
-              {[
-                {
-                  title: "Pour les propriétaires",
-                  description:
-                    "Rentabilisez votre parcelle en la louant à des professionnels. Publiez gratuitement votre annonce.",
-                },
-                {
-                  title: "Pour les professionnels",
-                  description:
-                    "Trouvez rapidement l'emplacement idéal pour votre activité commerciale grâce à notre recherche avancée.",
-                },
-                {
-                  title: "Mise en relation",
-                  description:
-                    "Échangez directement avec les propriétaires ou les professionnels via notre messagerie intégrée.",
-                },
-              ].map((feature) => (
-                <div key={feature.title} className="relative">
-                  <div className="relative bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {feature.title}
-                    </h3>
-                    <p className="mt-5 text-base text-gray-500">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Types de machines */}
-      <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold text-gray-900 sm:text-5xl mb-4">
-              Nos Solutions
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              Quels types d'emplacements sont disponibles ?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Découvrez notre large gamme d'équipements automatiques pour développer votre activité
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+              Sur notre plateforme, vous trouverez une grande variété de micro emplacements à louer à partir de 1m2 pour installer un distributeur automatique, un kiosque alimentaire, ou un point de service mobile. Mettez en location vos emplacement en interieur ou en exeterieur.
             </p>
           </motion.div>
 
-          <motion.div
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-12"
-          >
-            {machineTypes.map((type) => (
+          {/* Emplacements intérieurs */}
+          <div className="mb-16">
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <Building2 className="w-6 h-6 text-indigo-600" />
+              <h3 className="text-2xl font-bold text-gray-900">Emplacements intérieurs</h3>
+            </div>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {/* Bloc 1 - Commerces & Entreprises */}
               <motion.div
-                key={type.title}
                 variants={fadeIn}
-                className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col"
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
               >
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{type.title}</h3>
-                <p className="text-gray-600 mb-6">{type.description}</p>
-                <div className="flex-grow">
-                  <ul className="space-y-3">
-                    {type.items.map((item) => (
-                      <li key={item} className="flex items-start">
-                        <svg
-                          className="h-6 w-6 text-indigo-500 mr-2 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-gray-600">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Briefcase className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Commerces & Entreprises</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Halls d'immeubles de bureaux",
+                    "Locaux commerciaux",
+                    "Galeries marchandes",
+                    "Salles de pause",
+                    "Espaces d'accueil"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
-            ))}
-          </motion.div>
+
+              {/* Bloc 2 - Éducation & Transport */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <School className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Éducation & Transport</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Universités et écoles",
+                    "Bibliothèques",
+                    "Gares et métros",
+                    "Résidences étudiantes",
+                    "Centres de formation"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Bloc 3 - Services & Loisirs */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Coffee className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Services & Loisirs</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Salles d'attente",
+                    "Centres sportifs",
+                    "Hôtels et résidences",
+                    "Espaces de coworking",
+                    "Centres de loisirs"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Emplacements extérieurs */}
+          <div>
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <MapPin className="w-6 h-6 text-indigo-600" />
+              <h3 className="text-2xl font-bold text-gray-900">Emplacements extérieurs</h3>
+            </div>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {/* Bloc 1 - Zones Urbaines */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Building className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Zones Urbaines</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Trottoirs larges",
+                    "Coins de rue",
+                    "Places piétonnes",
+                    "Parvis",
+                    "Zones piétonnes"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Bloc 2 - Commerce & Services */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <ShoppingBag className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Commerce & Services</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Parkings commerciaux",
+                    "Devantures de magasins",
+                    "Stations-service",
+                    "Aires de repos",
+                    "Zones commerciales"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Bloc 3 - Événementiel & Spéciaux */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <PartyPopper className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Événementiel & Spéciaux</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Marchés et foires",
+                    "Festivals",
+                    "Terrains vacants",
+                    "Bases de loisirs",
+                    "Campings"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Emplacements intérieurs */}
+      {/* Section Distributeurs et Kiosques */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -382,111 +488,309 @@ export default function Home() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Emplacements intérieurs
+              Quels types de kiosques et de distributeurs peut-on installer ?
             </h2>
-            <p className="text-xl text-gray-600">
-              Des espaces couverts à fort potentiel
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+              Notre plateforme est ouverte à tous les concepts de petit commerce autonome, que ce soit des distributeurs automatiques, jeux d'arcade ou des kiosques mobiles. Chaque emplacement précise les types de projets acceptés par le propriétaire.
             </p>
           </motion.div>
 
-          <motion.div
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-          >
-            {interiorLocations.map((location) => (
-              <motion.div
-                key={location.title}
-                variants={fadeIn}
-                className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow"
-              >
-                <location.icon className="w-8 h-8 text-indigo-600 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{location.title}</h3>
-                <ul className="space-y-2">
-                  {location.examples.map((example) => (
-                    <li key={example} className="text-gray-600 flex items-center">
-                      <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full mr-2"></span>
-                      {example}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Emplacements extérieurs */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Emplacements extérieurs
-            </h2>
-            <p className="text-xl text-gray-600">
-              Des espaces stratégiques à fort passage
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-          >
-            {exteriorLocations.map((location) => (
-              <motion.div
-                key={location.title}
-                variants={fadeIn}
-                className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow"
-              >
-                <location.icon className="w-8 h-8 text-indigo-600 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{location.title}</h3>
-                <ul className="space-y-2">
-                  {location.examples.map((example) => (
-                    <li key={example} className="text-gray-600 flex items-center">
-                      <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full mr-2"></span>
-                      {example}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section className="py-16 bg-gradient-to-r from-indigo-600 to-indigo-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-          >
-            <h2 className="text-3xl font-bold text-white sm:text-4xl mb-4">
-              Prêt à développer votre activité ?
-            </h2>
-            <p className="text-xl text-indigo-100 mb-8">
-              Rejoignez la première plateforme de location d'emplacements pour distributeurs automatiques
-            </p>
-            <Link
-              href="/register"
-              className="inline-block bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors"
+          {/* Distributeurs automatiques */}
+          <div className="mb-16">
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <ShoppingCart className="w-6 h-6 text-indigo-600" />
+              <h3 className="text-2xl font-bold text-gray-900">Distributeurs automatiques</h3>
+            </div>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-4 gap-8"
             >
-              Créer un compte gratuitement
-            </Link>
-          </motion.div>
+              {/* Alimentation & Boissons */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Pizza className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Alimentation & Boissons</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Boissons fraîches",
+                    "Snacks et confiseries",
+                    "Café et boissons chaudes",
+                    "Plats cuisinés",
+                    "Sandwichs et salades"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Produits spécialisés */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Store className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Produits spécialisés</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Pizzas fraîches",
+                    "Baguettes et viennoiseries",
+                    "Fruits et légumes",
+                    "Produits fermiers",
+                    "Fleurs"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Autres distributeurs */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <ShoppingBag className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Autres distributeurs</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Cosmétiques",
+                    "Produits d'hygiène",
+                    "Accessoires high-tech",
+                    "Journaux et magazines",
+                    "Petit électroménager"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Logistique */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Package className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Logistique</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Consignes à colis",
+                    "Click & collect",
+                    "Casiers réfrigérés",
+                    "Consignes entreprises",
+                    "Armoires connectées"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Kiosques */}
+          <div className="mb-16">
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <UtensilsCrossed className="w-6 h-6 text-indigo-600" />
+              <h3 className="text-2xl font-bold text-gray-900">Kiosques</h3>
+            </div>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {/* Restauration rapide */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Sandwich className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Restauration rapide</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Burgers",
+                    "Frites et snacks",
+                    "Crêpes et gaufres",
+                    "Street food",
+                    "Poke bowl et sushis"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Services de proximité */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Box className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Services de proximité</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Fleuriste",
+                    "Retouche et couture",
+                    "Pressing mobile",
+                    "Cordonnerie",
+                    "Réparation express"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Concepts éphémères */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <PartyPopper className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Concepts éphémères</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Kiosque événementiel",
+                    "Stand de marque",
+                    "Pop-up store",
+                    "Boutique test",
+                    "Festival et foire"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Jeux et arcades */}
+          <div>
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <Gamepad2 className="w-6 h-6 text-indigo-600" />
+              <h3 className="text-2xl font-bold text-gray-900">Jeux et arcades</h3>
+            </div>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            >
+              {/* Jeux classiques */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Gamepad2 className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Jeux classiques</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Baby-foot à monnayeur",
+                    "Billard automatique",
+                    "Fléchettes électroniques",
+                    "Air hockey",
+                    "Bornes d'arcade rétro"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Divertissements modernes */}
+              <motion.div
+                variants={fadeIn}
+                className="bg-gradient-to-br from-white to-indigo-50/30 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-indigo-100/50 relative group"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 rounded-l-xl"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Gamepad2 className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-gray-900">Divertissements modernes</h4>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "Simulateurs de conduite",
+                    "Machines à pinces",
+                    "Photobooths",
+                    "Jukebox connectés",
+                    "Mini-karts (extérieur)"
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-gray-600 group-hover:text-gray-900 transition-colors">
+                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
