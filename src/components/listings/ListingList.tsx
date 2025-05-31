@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { toast } from 'react-hot-toast';
 import { Listing } from '@/types';
 
 export default function ListingList() {
@@ -15,17 +16,54 @@ export default function ListingList() {
   useEffect(() => {
     const fetchListings = async () => {
       try {
+        console.log('Fetching listings...');
         const response = await fetch(`/api/listings?${searchParams.toString()}`);
+        console.log('Response status:', response.status);
+        
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type:', contentType);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch listings');
+          const errorText = await response.text();
+          console.error('Response not OK:', {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText
+          });
+          throw new Error(`Failed to fetch listings: ${response.status} ${response.statusText}`);
         }
+        
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Response is not JSON');
+        }
+        
         const data = await response.json();
-        setListings(data);
+        console.log('Response data:', data);
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to fetch listings');
+        }
+        
+        if (!Array.isArray(data.data)) {
+          console.error('Unexpected data format:', data);
+          throw new Error('Invalid data format received');
+        }
+        
+        setListings(data.data);
       } catch (error) {
-        console.error('Error fetching listings:', error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+        if (error instanceof Error) {
+          toast.error(`Erreur: ${error.message}`);
+        } else {
+          toast.error('Une erreur est survenue lors du chargement des annonces');
+        }
       } finally {
         setLoading(false);
-      }
+      };
     };
 
     fetchListings();

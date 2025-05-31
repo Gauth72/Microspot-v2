@@ -13,8 +13,13 @@ enum MainCategory {
 
 enum SpaceType {
   INDOOR = 'INDOOR',
-  OUTDOOR = 'OUTDOOR',
-  MIXED = 'MIXED'
+  OUTDOOR = 'OUTDOOR'
+}
+
+enum ListingStatus {
+  ACTIVE = 'ACTIVE',
+  RENTED = 'RENTED',
+  INACTIVE = 'INACTIVE'
 }
 
 export async function POST(request: Request) {
@@ -34,6 +39,16 @@ export async function POST(request: Request) {
     const data = await request.json();
     console.log('Received data:', data);
     const { images, subCategory, specificType, ...listingData } = data;
+    
+    // S'assurer que listingType est défini
+    if (!listingData.listingType) {
+      listingData.listingType = 'LOCATION';
+    }
+    
+    // S'assurer que spaceSubCategory est une chaîne ou null
+    if (listingData.spaceSubCategory === undefined) {
+      listingData.spaceSubCategory = null;
+    }
     
     // Traitement du type spécifique en fonction de la catégorie principale
     let vendingTypeData = {};
@@ -132,6 +147,18 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    // Test de la connexion à la base de données
+    try {
+      await prisma.$connect();
+      console.log('Successfully connected to database');
+    } catch (dbError) {
+      console.error('Database connection error:', {
+        name: dbError.name,
+        message: dbError.message,
+        stack: dbError.stack
+      });
+      throw new Error(`Database connection failed: ${dbError.message}`);
+    }
     const { searchParams } = new URL(request.url);
     
     // Paramètres de recherche de base
@@ -158,7 +185,10 @@ export async function GET(request: Request) {
     const access = searchParams.get('access');
 
     let whereClause: any = {
-      status: 'ACTIVE',
+      status: ListingStatus.ACTIVE,
+      title: {
+        not: ''
+      }
     };
 
     // Recherche textuelle
@@ -210,6 +240,24 @@ export async function GET(request: Request) {
       }
     }
 
+    console.log('Executing Prisma query with whereClause:', JSON.stringify(whereClause, null, 2));
+    
+    console.log('Executing Prisma query with full options:', JSON.stringify({
+      where: whereClause,
+      include: {
+        owner: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        images: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }, null, 2));
+
     const listings = await prisma.listing.findMany({
       where: whereClause,
       include: {
@@ -226,12 +274,27 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json(listings);
+    console.log('Raw listings from database:', JSON.stringify(listings, null, 2));
+    
+    console.log(`Found ${listings.length} listings`);
+
+    const response = NextResponse.json({
+      success: true,
+      data: listings
+    });
+    response.headers.set('Content-Type', 'application/json');
+    return response;
   } catch (error) {
-    console.error('Error fetching listings:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des annonces' },
-      { status: 500 }
-    );
+    console.error('Error fetching listings:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    const errorResponse = NextResponse.json({
+      success: false,
+      error: `Erreur lors de la récupération des annonces: ${error.message}`
+    }, { status: 500 });
+    errorResponse.headers.set('Content-Type', 'application/json');
+    return errorResponse;
   }
 }

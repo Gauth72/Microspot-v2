@@ -176,7 +176,7 @@ export default function CreateListing() {
         title,
         description,
         surface: parseFloat(surface),
-        monthlyRent: parseFloat(monthlyRent),
+        price: parseFloat(monthlyRent),
         address,
         city,
         postalCode,
@@ -192,7 +192,7 @@ export default function CreateListing() {
         hasWater,
         internetType,
         images: uploadedImages,
-        userId: session.user.id,
+        ownerId: session.user.id,
         listingType: 'LOCATION',
       };
 
@@ -251,10 +251,12 @@ export default function CreateListing() {
                 </label>
                 <input
                   type="text"
-                  name="title"
                   id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ex: Emplacement pour distributeur de pizzas - Station de lavage"
                   required
-                  className="h-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
 

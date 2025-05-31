@@ -78,6 +78,7 @@ model Listing {
   latitude        Float?
   longitude       Float?
   spaceType       SpaceType
+  spaceSubCategory String?  @db.Text
   is24_7          Boolean  @default(false)
   openingTime     String?
   closingTime     String?
