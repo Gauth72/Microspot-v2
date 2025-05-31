@@ -709,6 +709,9 @@ video {
 .col-span-2 {
   grid-column: span 2 / span 2;
 }
+.col-span-6 {
+  grid-column: span 6 / span 6;
+}
 .\!-m-px {
   margin: -1px !important;
 }
@@ -1652,6 +1655,9 @@ video {
 .pt-6 {
   padding-top: 1.5rem;
 }
+.pr-10 {
+  padding-right: 2.5rem;
+}
 .text-left {
   text-align: left;
 }
@@ -2204,6 +2210,10 @@ body {
 
   .sm\:col-span-2 {
     grid-column: span 2 / span 2;
+  }
+
+  .sm\:col-span-3 {
+    grid-column: span 3 / span 3;
   }
 
   .sm\:mx-auto {

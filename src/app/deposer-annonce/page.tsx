@@ -9,9 +9,49 @@ import { toast } from 'react-hot-toast';
 
 enum SpaceType {
   INDOOR = 'INDOOR',
-  OUTDOOR = 'OUTDOOR',
-  MIXED = 'MIXED'
+  OUTDOOR = 'OUTDOOR'
 }
+
+const INDOOR_SPACES = [
+  'Espaces communs dans les entreprises',
+  'Halls d\'immeubles résidentiels ou de bureaux',
+  'Locaux commerciaux vacants ou partagés',
+  'Galeries marchandes et centres commerciaux',
+  'Centres sportifs ou gymnases municipaux',
+  'Stand éphémère, pop-up store',
+  'Salles d\'attente',
+  'Food-court',
+  'Couloirs d\'universités, lycées, écoles privées',
+  'Réceptions d\'hôtels ou de résidences touristiques',
+  'Cafétérias, cantines, zones détente',
+  'Espaces dans les stations de métro, gares ou aérogares',
+  'Entrées de parkings souterrains ou couverts',
+  'Locaux de coworking ou espaces de formation',
+  'Zones de transit dans les centres logistiques ou entrepôts',
+  'Espace situé dans une copropriété',
+  'Boutiques fermées ou vitrines vacantes',
+  'Autres'
+] as const;
+
+const OUTDOOR_SPACES = [
+  'Parkings de centres commerciaux ou supermarchés',
+  'Parkings entreprise',
+  'Jardins ou cours d\'entreprises',
+  'Parkings administration',
+  'Devantures de boutique',
+  'Espaces sur des stations-service',
+  'Espaces sur des stations de lavage',
+  'Emplacements temporaires pour événements / festivals',
+  'Terrains vacants ou friches en attente de construction',
+  'Terrains agricoles, fermes ou domaines viticoles',
+  'Trottoirs larges',
+  'Places privées devant maisons ou copropriétés',
+  'Abords de marchés de plein air',
+  'Espaces disponibles sur des campings ou aires d\'accueil',
+  'Aires de covoiturage ou parkings relais',
+  'Parvis d\'écoles, mairies, médiathèques',
+  'Autres'
+] as const;
 
 enum MainCategory {
   VENDING_MACHINE = 'VENDING_MACHINE',
@@ -41,6 +81,7 @@ export default function CreateListing() {
   const [openingTime, setOpeningTime] = useState<string>('');
   const [closingTime, setClosingTime] = useState<string>('');
   const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.INDOOR);
+  const [spaceSubCategory, setSpaceSubCategory] = useState<string>('');
   const [hasConcreteSlab, setHasConcreteSlab] = useState(false);
   const [hasElectricity, setHasElectricity] = useState(false);
   const [hasWater, setHasWater] = useState(false);
@@ -134,22 +175,24 @@ export default function CreateListing() {
       const listingData = {
         title,
         description,
-        surface: parseFloat(surface || '0'),
-        price: parseFloat(monthlyRent || '0'),
+        surface: parseFloat(surface),
+        monthlyRent: parseFloat(monthlyRent),
         address,
         city,
         postalCode,
+        spaceType,
+        spaceSubCategory,
+        mainCategory: selectedMainCategory,
+        subCategory: selectedSubCategory,
         is24_7,
         openingTime: is24_7 ? null : openingTime,
         closingTime: is24_7 ? null : closingTime,
-        spaceType,
         hasConcreteSlab,
         hasElectricity,
         hasWater,
         internetType,
-        mainCategory: selectedMainCategory,
-        subCategory: selectedSubCategory,
         images: uploadedImages,
+        userId: session.user.id,
         listingType: 'LOCATION',
       };
 
@@ -497,22 +540,65 @@ export default function CreateListing() {
                 />
               </div>
 
-              <div>
-                <label htmlFor="spaceType" className="block text-sm font-bold text-indigo-600">
+              <div className="col-span-6 sm:col-span-3">
+                <label htmlFor="spaceType" className="block text-sm font-bold text-indigo-600 mb-2">
                   Type d'espace
                 </label>
-                <select
-                  id="spaceType"
-                  value={spaceType}
-                  onChange={(e) => setSpaceType(e.target.value as SpaceType)}
-                  className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  <option value="">Sélectionnez un type d'espace</option>
-                  <option value={SpaceType.INDOOR}>Intérieur</option>
-                  <option value={SpaceType.OUTDOOR}>Extérieur</option>
-                  <option value={SpaceType.MIXED}>Mixte</option>
-                </select>
+                <div className="relative">
+                  <select
+                    id="spaceType"
+                    name="spaceType"
+                    value={spaceType}
+                    onChange={(e) => {
+                      setSpaceType(e.target.value as SpaceType);
+                      setSpaceSubCategory('');
+                    }}
+                    className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-white"
+                    required
+                  >
+                    <option value={SpaceType.INDOOR}>Intérieur</option>
+                    <option value={SpaceType.OUTDOOR}>Extérieur</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-6">
+                <label htmlFor="spaceSubCategory" className="block text-sm font-bold text-indigo-600 mb-2">
+                  Catégorie d'espace
+                </label>
+                <div className="relative">
+                  <select
+                    id="spaceSubCategory"
+                    name="spaceSubCategory"
+                    value={spaceSubCategory}
+                    onChange={(e) => setSpaceSubCategory(e.target.value)}
+                    className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-white"
+                    required
+                  >
+                    <option value="">Sélectionnez une catégorie</option>
+                    {spaceType === SpaceType.INDOOR
+                      ? INDOOR_SPACES.map((space) => (
+                          <option key={space} value={space}>
+                            {space}
+                          </option>
+                        ))
+                      : OUTDOOR_SPACES.map((space) => (
+                          <option key={space} value={space}>
+                            {space}
+                          </option>
+                        ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
