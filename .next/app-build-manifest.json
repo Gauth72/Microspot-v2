@@ -10,12 +10,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
-    ],
     "/error": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -31,6 +25,27 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/politique-de-confidentialite/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/politique-de-confidentialite/page.js"
+    ],
+    "/mentions-legales/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/mentions-legales/page.js"
+    ],
+    "/conditions-utilisation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/conditions-utilisation/page.js"
+    ],
     "/annonces/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -41,20 +56,40 @@
       "static/chunks/main-app.js",
       "static/chunks/app/annonces/layout.js"
     ],
-    "/profil/page": [
+    "/annonces/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/profil/page.js"
+      "static/chunks/app/annonces/[id]/page.js"
     ],
     "/deposer-annonce/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/deposer-annonce/page.js"
     ],
-    "/annonces/[id]/page": [
+    "/profil/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/annonces/[id]/page.js"
+      "static/chunks/app/profil/page.js"
+    ],
+    "/favoris/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/favoris/page.js"
+    ],
+    "/messages/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/messages/page.js"
+    ],
+    "/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/login/page.js"
+    ],
+    "/register/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/register/page.js"
     ]
   }
 }

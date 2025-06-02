@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -13,6 +14,7 @@ type ListingCardProps = {
   location: string;
   type: string;
   createdAt: string;
+  images: string[];
   owner: {
     name: string | null;
   };
@@ -34,10 +36,27 @@ export default function ListingCard({
   location,
   type,
   createdAt,
+  images,
   owner,
 }: ListingCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <Link href={`/annonces/${id}`} className="block relative aspect-[4/3] overflow-hidden">
+        {images && images.length > 0 ? (
+          <Image
+            src={images[0]}
+            alt={title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover hover:scale-105 transition-transform duration-300"
+            priority={false}
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">Aucune image</span>
+          </div>
+        )}
+      </Link>
       <div className="p-6">
         <div className="flex justify-between items-start">
           <h3 className="text-xl font-semibold text-gray-900">
