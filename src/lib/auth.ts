@@ -1,14 +1,12 @@
-import type { DefaultSession, NextAuthOptions } from 'next-auth';
-import type { JWT } from 'next-auth/jwt';
-import Credentials from 'next-auth/providers/credentials';
+import type { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import { compare } from 'bcryptjs';
-import { User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const authOptions: NextAuthOptions = {
-
   providers: [
-    Credentials({
+    CredentialsProvider({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -16,25 +14,33 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error('Invalid credentials');
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
-        }) as User | null;
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            hashedPassword: true,
+            image: true,
+            profileImage: true,
+            coverImage: true
+          }
+        }) as Prisma.UserGetPayload<{ select: { id: true, email: true, name: true, hashedPassword: true, image: true, profileImage: true, coverImage: true } }> | null;
 
         if (!user || !user.hashedPassword) {
-          console.log('User not found or no password:', credentials.email);
-          return null;
+          throw new Error('Invalid credentials');
         }
 
-        const isValid = await compare(credentials.password, user.hashedPassword);
+        const isPasswordValid = await compare(
+          credentials.password,
+          user.hashedPassword
+        );
 
-        if (!isValid) {
-          console.log('Invalid password for user:', credentials.email);
-          return null;
+        if (!isPasswordValid) {
+          throw new Error('Invalid credentials');
         }
 
         return {
@@ -43,42 +49,15 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           profileImage: user.profileImage,
-          coverImage: user.coverImage,
+          coverImage: user.coverImage
         };
-      },
+      }
     })
   ],
-  session: {
-    strategy: 'jwt' as const,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
   pages: {
-    signIn: '/login',
+    signIn: '/login'
   },
+  session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
-  callbacks: {
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub;
-
-        // Récupérer l'utilisateur avec ses images
-        const user = await prisma.user.findUnique({
-          where: { id: token.sub },
-        });
-
-        if (user) {
-          session.user.profileImage = user.profileImage || '';
-          session.user.coverImage = user.coverImage || '';
-        }
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
-    },
-  }
+  debug: process.env.NODE_ENV === 'development'
 };
