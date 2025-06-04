@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import { compare } from 'bcryptjs';
+import { User } from '@prisma/client';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -22,14 +23,14 @@ export const authOptions: NextAuthOptions = {
           where: {
             email: credentials.email,
           },
-        });
+        }) as User | null;
 
-        if (!user || !user.password) {
+        if (!user || !user.hashedPassword) {
           console.log('User not found or no password:', credentials.email);
           return null;
         }
 
-        const isValid = await compare(credentials.password, user.password);
+        const isValid = await compare(credentials.password, user.hashedPassword);
 
         if (!isValid) {
           console.log('Invalid password for user:', credentials.email);
