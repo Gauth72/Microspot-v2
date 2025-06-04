@@ -8,7 +8,7 @@ import MessageInput from '@/components/messages/MessageInput';
 
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import type { Message, Conversation } from '@/types';
+import type { Message, Conversation } from '@/types/index';
 
 function MessagesPageContent() {
   const { data: session } = useSession();
