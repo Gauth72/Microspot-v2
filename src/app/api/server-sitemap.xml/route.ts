@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';\
 import { getServerSideSitemap } from 'next-sitemap';
 import prisma from '@/lib/prismadb';
 

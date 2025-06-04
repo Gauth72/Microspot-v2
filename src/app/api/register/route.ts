@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         email,
-        hashedPassword,
+        password: hashedPassword,
         name,
         userType: 'USER',
       },
