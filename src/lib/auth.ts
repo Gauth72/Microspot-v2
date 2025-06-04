@@ -24,12 +24,12 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (!user || !user.hashedPassword) {
+        if (!user || !user.password) {
           console.log('User not found or no password:', credentials.email);
           return null;
         }
 
-        const isValid = await compare(credentials.password, user.hashedPassword);
+        const isValid = await compare(credentials.password, user.password);
 
         if (!isValid) {
           console.log('Invalid password for user:', credentials.email);
@@ -64,8 +64,8 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (user) {
-          session.user.profileImage = user.profileImage;
-          session.user.coverImage = user.coverImage;
+          session.user.profileImage = user.profileImage || '';
+          session.user.coverImage = user.coverImage || '';
         }
       }
       return session;
