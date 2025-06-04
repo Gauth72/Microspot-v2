@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { getServerSideSitemap } from 'next-sitemap';
+import type { ISitemapField } from 'next-sitemap';
 import prisma from '@/lib/prismadb';
 
 export async function GET() {
@@ -12,7 +13,7 @@ export async function GET() {
   });
 
   // Créer les entrées du sitemap
-  const fields = listings.map((listing) => ({
+  const fields: ISitemapField[] = listings.map((listing) => ({
     loc: `${process.env.NEXT_PUBLIC_SITE_URL}/annonces/${listing.id}`,
     lastmod: new Date(listing.updatedAt).toISOString(),
     changefreq: 'daily',
